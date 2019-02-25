@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- ----------------------------------  CSS  ------------------------------------------------ -->
+<style>
+
+/**
+ * ==============================================
+ * Dot Carousel
+ * ==============================================
+ */
+.dot-carousel {
+  position: relative;
+  left: -9850px;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color: #9880ff;
+  color: #9880ff;
+  box-shadow: 9984px 0 0 0 #9880ff, 9999px 0 0 0 #9880ff, 10014px 0 0 0 #9880ff;
+  animation: dotCarousel 1.5s infinite linear;
+}
+
+@keyframes dotCarousel {
+  0% {
+    box-shadow: 9984px 0 0 -1px #9880ff, 9999px 0 0 1px #9880ff, 10014px 0 0 -1px #9880ff;
+  }
+  50% {
+    box-shadow: 10014px 0 0 -1px #9880ff, 9984px 0 0 -1px #9880ff, 9999px 0 0 1px #9880ff;
+  }
+  100% {
+    box-shadow: 9999px 0 0 1px #9880ff, 10014px 0 0 -1px #9880ff, 9984px 0 0 -1px #9880ff;
+  }
+}
+
+
+
+</style>
+<!-- ----------------------------------------------------------------------------------------- -->
+
+<head>
+	<title>Recall IE</title>
+	<meta charset="utf-8" />
+	{% load static %}
+	<link rel="stylesheet" href="{% static 'personal/css/bootstrap.min.css' %}" type = "text/css"/>
+    <script type="text/javascript" src="{% static 'personal/js/func.js' %}"></script>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+
+	<meta name="viewport" content = "width=device-width, initial-scale=1.0">
+	
+	<style type="text/css">
+		body {
+		  height:100%
+		}
+	</style>
+</head>
+
+<body class="body" style="background-color:#f6f6f6" onload="check_passed()">
+	<div class="container-fluid" style="min-height:95%; ">
+        
+		<div class="row">
+			  <div class="col-sm-2">
+				  <br>
+				  <center>
+					<img src="{% static 'personal/img/mpi.jpg' %}" class="responsive-img" style='max-height:100px;' alt="face">
+				  </center>
+			  </div>
+			  <div class="col-sm-10">
+				  <br>
+				  <center>
+				  <h3>Recall-Aware Information Extraction</h3>
+				  </center>
+                  <!-- <br>
+                  <center>
+                  <button type="button" class="btn btn-dark">Train Classifier</button>
+                  </center> -->
+			  </div>
+		</div><hr>
+
+    <div class="col">
+            
+            
+        <!--<h2><span class="badge badge-secondary">Analyse Text</span></h2>-->
+            
+        <div class="card" style="width: 18rem;">
+          <div class="card-body" >
+            <h5 class="card-title" >Analyse Text</h5>
+            <h6 class="card-subtitle mb-2 text-muted">Enter your sentence below</h6>
+          </div>
+        </div>
+        
+        <form name="form1" >
+            <div class="form-group">
+            <textarea class="form-control" id="texttoanalyse" name="texttoanalyse" rows="6" cols="200" ></textarea>
+            </div>      
+            <!-- <script>
+            function show() {
+                document.getElementById("write").innerHTML = window.location.search;
+            }
+            </script> -->  
+        </form>
+
+
+ 
+        <!-- <center> -->
+        <button class="btn btn-primary" onclick="extract()" >Extract</button>
+        <a class="btn btn-dark" role="button" href="/">Back</a>
+        <!-- </center> -->
+           
+
+
+        <div class="col-sm-10">
+          <center>
+          <div class='container-fluid' id="response">
+          <br><br>
+          </div>
+          </center>
+        </div>
+
+        <div class="col-sm-10">
+          <center>
+          <div class='container-fluid' id="response2">
+          <br><br>
+          </div>
+          </center>
+        </div>
+
+        <div class="col-sm-10">
+          <center>
+          <div class='container-fluid' id="debugging">
+          <br><br>
+          </div>
+          </center>
+        </div>
+	
+    </div>
+    </div>
+    
+	
+</body>
+
+</html>

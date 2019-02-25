@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- ----------------------------------  CSS  ------------------------------------------------ -->
+<style>
+
+/**
+ * ==============================================
+ * For Hovering over the Tables
+ * ==============================================
+ */
+
+table {
+  table-layout: auto;
+  width: 100%;
+}
+
+td {
+  border: 1px solid #999;
+  padding: 10px;
+  position: relative;
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;         /* <- this does seem to be required */
+  text-overflow: ellipsis;
+}
+
+td:hover{
+    border: 1px solid #999;
+    padding: 10px;
+    position: relative;
+    text-overflow:clip;
+    white-space: normal;
+    background-color: #ffa;
+}
+
+.loader {
+  border: 16px solid #f3f3f3; /* Light grey */
+  border-top: 16px solid #3498db; /* Blue */
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
+/**
+ * ==============================================
+ * Dot Carousel
+ * ==============================================
+ */
+.dot-carousel {
+  position: relative;
+  left: -9850px;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color: #9880ff;
+  color: #9880ff;
+  box-shadow: 9984px 0 0 0 #9880ff, 9999px 0 0 0 #9880ff, 10014px 0 0 0 #9880ff;
+  animation: dotCarousel 1.5s infinite linear;
+}
+
+@keyframes dotCarousel {
+  0% {
+    box-shadow: 9984px 0 0 -1px #9880ff, 9999px 0 0 1px #9880ff, 10014px 0 0 -1px #9880ff;
+  }
+  50% {
+    box-shadow: 10014px 0 0 -1px #9880ff, 9984px 0 0 -1px #9880ff, 9999px 0 0 1px #9880ff;
+  }
+  100% {
+    box-shadow: 9999px 0 0 1px #9880ff, 10014px 0 0 -1px #9880ff, 9984px 0 0 -1px #9880ff;
+  }
+}
+
+
+
+</style>
+<!-- ----------------------------------------------------------------------------------------- -->
+
+<head>
+	<title>Recall IE</title>
+	<meta charset="utf-8" />
+	{% load static %}
+	<!-- <link rel="stylesheet" href="{% static 'links/css/three-dots.css' %}"> -->
+	<link rel="stylesheet" href="{% static 'links/css/bootstrap.min.css' %}" type = "text/css"/>
+    <script type="text/javascript" src="{% static 'links/js/func.js' %}"></script>
+    <script type="text/javascript" src="{% static 'links/js/jquery-1.7.1.min.js' %}"></script>
+
+	<meta name="viewport" content = "width=device-width, initial-scale=1.0">
+	
+	<style type="text/css">
+		body {
+		  height:100%
+		}
+	</style>
+</head>
+
+<body class="body" style="background-color:#f6f6f6" onload="check_passed()">
+	<div class="container-fluid" style="min-height:95%; ">
+        
+		<div class="row">
+			  <div class="col-sm-2">
+				  <br>
+				  <center>
+					<img src="{% static 'personal/img/mpi.jpg' %}" class="responsive-img" style='max-height:100px;' alt="face">
+				  </center>
+			  </div>
+			  <div class="col-sm-10">
+				  <br>
+				  <center>
+				  <h3>Recall-Aware Information Extraction</h3>
+				  </center>
+                 <!--  <br>
+                  <center>
+                  <button type="button" class="btn btn-dark">Train Classifier</button>
+                  </center> -->
+			  </div>
+		</div><hr>
+
+    <div class="col">
+            
+            
+        <!--<h2><span class="badge badge-secondary">Analyse Text</span></h2>-->
+            
+        <div class="card" style="width: 18rem;">
+          <div class="card-body" >
+            <h5 class="card-title" >Analyse Text</h5>
+            <h6 class="card-subtitle mb-2 text-muted">Enter text to search on wikipedia below</h6>
+          </div>
+        </div>
+        
+        <form name="form1" >
+            <div class="form-group">
+            	<!-- <textarea class="form-control" id="searchbar" name="searchbar" ></textarea> -->
+              <span class="myarrow">
+                <input class="form-control" id="searchbar" name="searchbar" list="suggestions-menu" onkeypress="suggestions()" autocomplete="off">
+              </span>
+        			<datalist id="suggestions-menu">
+        			  <!-- <option value="Chrome"> -->
+        			</datalist>
+            </div>        
+        </form>
+
+        
+        <button class="btn btn-primary" onclick="extract()" >Extract</button>
+        <a class="btn btn-dark" role="button" href="/">Back</a>
+
+
+        
+
+        <div class="col-sm-10">
+          <center>
+    			<div class='container-fluid' id="response" >
+    			<br><br>
+    			</div>
+          </center>
+        </div>
+
+        <div class="col-sm-10">
+          <center>
+    			<div class='container-fluid' id="response2">
+    			<br><br>
+    			</div>
+          </center>
+        </div>
+
+        <div class="col-sm-10">
+          <center>
+    			<div class='container-fluid' id="debugging">
+    			<br><br>
+    			</div>
+          </center>
+        </div>
+	
+    </div>
+    </div>
+    
+	
+</body>
+
+</html>

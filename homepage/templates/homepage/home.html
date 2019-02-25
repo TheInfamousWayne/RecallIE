@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- ----------------------------------  CSS  ------------------------------------------------ -->
+<style>
+
+/**
+ * ==============================================
+ * Contact Chips
+ * ==============================================
+ */
+
+.chip {
+	display: inline-block;
+	padding: 0 25px;
+	height: 50px;
+	font-size: 16px;
+	line-height: 50px;
+	border-radius: 25px;
+	background-color: #f1f1f1;
+}
+
+.chip img {
+	float: left;
+	margin: 0 10px 0 -25px;
+	height: 50px;
+	width: 50px;
+	border-radius: 50%;
+}
+/**
+ * ==============================================
+ * List Items
+ * ==============================================
+ */
+li:hover{
+ cursor: pointer;
+}
+
+</style>
+<!-- ----------------------------------------------------------------------------------------- -->
+
+<head>
+	<title>Recall IE</title>
+	<meta charset="utf-8" />
+	{% load static %}
+	<link rel="stylesheet" href="{% static 'homepage/css/bootstrap.min.css' %}" type = "text/css"/>
+    <script type="application/javascript" src="{% static 'homepage/js/func.js' %}"></script>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+
+	<meta name="viewport" content = "width=device-width, initial-scale=1.0">
+	
+	<style type="text/css">
+		body {
+		  height:100%
+		}
+	</style>
+</head>
+
+<body class="body" style="background-color:#f6f6f6" onload="default_value()">
+
+	<div class="container-fluid" style="min-height:95%; ">
+        
+		<div class="row">
+			  <div class="col-sm-2">
+				  <br>
+				  <center>
+					<img src="{% static 'homepage/img/mpi.jpg' %}" class="responsive-img" style='max-height:100px;' alt="face">
+				  </center>
+			  </div>
+			  <div class="col-sm-10">
+				  <br>
+				  <center>
+				  <h3>Recall-Aware Information Extraction</h3>
+				  </center>
+                  <!-- <br>
+                  <center>
+                  <button type="button" class="btn btn-dark">Train Classifier</button>
+                  </center> -->
+			  </div>
+		</div>
+		<hr>
+
+
+	    <div class="container">
+		    <div class="row mt-5 justify-content-center" style="text-align:center; ">
+		        <div class="card" style="width: 18rem;">
+				  <div class="card-body">
+				    <h5 class="card-title">A. Analyse Custom Text</h5>
+				    <p class="card-text">Insert text for relation extraction and recall awareness.</p>
+				    <a href="/personal/" class="btn btn-primary">Start</a>
+				  </div>
+				</div>
+
+		        <div class="card" style="width: 18rem; ">
+				  <div class="card-body">
+				    <h5 class="card-title">B. Analyse Wikipedia Page</h5>
+				    <p class="card-text">Choose a wikipedia page for relation extraction and recall awareness.</p>
+				    <a href="/links/" class="btn btn-primary">Start</a>
+				  </div>
+				</div>
+
+		        <div class="card" style="width: 18rem; ">
+				  <div class="card-body">
+				    <h5 class="card-title">C. View Precomputed Text Segments</h5>
+				    <p class="card-text">Enter for relation extraction and recall awareness.</p>
+				    <a href="/custom/" class="btn btn-primary">Start</a>
+				  </div>
+				</div>
+
+		    </div>
+		</div>
+		<br>
+		<hr>
+
+		
+			<div class="col-sm-10">
+				<h5> Made-Up Examples </h5>
+				<ul id="madeupeg">
+				<li id='m' onclick="store(this)">Mary lives in Paris. Mary has two children, James and Lisa. Mary is married to Fred. Mary was also married to Frank once.</li>
+				<li id='m' onclick="store(this)">Steve Jobs was founder of Apple. Steve Jobs lived in California. He was also CEO of AOL. He graduated from Saarland University and dropped out of the University of Iceland.</li>
+				</ul>
+	        </div>
+	        <br>
+
+			<div class="col-sm-10">
+				<h5> Link Examples </h5>
+				<ul id="linkeg">
+				  <li id='l' onclick="store(this)">Steve Jobs</li>
+				  <li id='l' onclick="store(this)">Hillary Clinton</li>
+				  <li id='l' onclick="store(this)">Gerhard Weikum</li>
+				</ul>
+	        </div>
+        
+        
+
+    </div>
+    
+    <div style="position: fixed; bottom: 0; right: 0">
+	    <div class="chip">Vaibhav</div>
+	    <div class="chip">Simon</div>
+	    <div class="chip">Paramita</div>
+	    <div class="chip">Gerhard</div>
+	</div>
+
+</body>
+
+</html>
