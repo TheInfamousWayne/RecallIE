@@ -3,7 +3,7 @@ from django.http import JsonResponse
 import wikipedia
 import pandas as pd
 import numpy as np
-from .utils import Utils
+from utils import Utils
 
 # Create your views here.
 def index(request):
@@ -28,7 +28,6 @@ def result(request, debug=False):
         message_data = request.GET['searchbar']
         
         try:
-            u = Utils()
             result, message_id = u.Analyse(message_data)
             df = pd.DataFrame(result, columns=['Subject','Relationship','Object','Confidence'])
         
@@ -38,9 +37,9 @@ def result(request, debug=False):
             e1Grp = pd.DataFrame(rows, columns=e1Grp.columns).set_index(['Subject','Relationship'])
             
             #######################
-#             id_dict = u.get_dict()
+            id_dict = u.get_dict()
 
-            main_df = df[df['Subject'].apply(lambda row: u.get_id(row)) == message_id]
+            main_df = df[df['Subject'].apply(lambda row: u.get_id(row,id_dict)) == message_id]
             other_df = df[~df.isin(main_df).all(1)]
 
             main_df = main_df.sort_values('Object', ascending=True).drop_duplicates().groupby(['Subject','Relationship']).agg(lambda x: list(x))
@@ -59,10 +58,7 @@ def result(request, debug=False):
             ###### ADDING RECALL SCORE ######
             main_df = u.add_recall_score(main_df)
             other_df = u.add_recall_score(other_df)
-            
-            ###### DELETING THE OBJECT ######
-            del u
-            
+
             # main_df = main_df.reset_index()
             # main_df['Ground Truth'] = main_df.apply(lambda row: u.ground_truth(row['Relationship'], row['Subject']), axis=1)
             # main_df['Count_GT'] = main_df['Ground Truth'].apply(lambda x: len(x))
@@ -85,8 +81,12 @@ def result(request, debug=False):
             with pd.option_context('display.max_colwidth', -1):
                 main_df = main_df.to_html()
                 other_df = other_df.to_html()
-                
+
             return JsonResponse({'main_df':main_df, 'debug':e1Grp.to_html(), 'other_df':other_df, 'error':""})   #, 'entity_2_group':e2Grp.to_html()})
         except Exception as e:
             return JsonResponse({'error':str(e)})
 
+
+
+obj = Utils()
+print (obj)

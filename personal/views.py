@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from . import utils as u
+from .utils import Utils
 import pandas as pd
 from django.http import JsonResponse
 
@@ -14,6 +14,7 @@ def result(request):
 		message_data = request.GET['texttoanalyse']
 		
 		try:
+			u = Utils()            
 			result, message_id = u.Analyse(message_data)
 			df = pd.DataFrame(result, columns=['Subject','Relationship','Object','Confidence'])
 			#print (df)
@@ -26,9 +27,9 @@ def result(request):
 			#print(e1Grp)
             
 			##############################
-			id_dict = u.get_dict()
+# 			id_dict = u.get_dict()
 
-			main_df = df[df['Subject'].apply(lambda row: u.get_id(row,id_dict)) == message_id]
+			main_df = df[df['Subject'].apply(lambda row: u.get_id(row)) == message_id]
 			other_df = df[~df.isin(main_df).all(1)]
 			#print("2")
 			main_df = main_df.sort_values('Object', ascending=True).drop_duplicates().groupby(['Subject','Relationship']).agg(lambda x: list(x))
@@ -42,7 +43,7 @@ def result(request):
 				other_df = other_df[[c for c in other_df if c not in ['Confidence']] + ['Confidence']]
 			#print("4")            
 	        ##############################
-
+			del u
 			with pd.option_context('display.max_colwidth', -1):
 				main_df = main_df.to_html()
 				other_df = other_df.to_html()
