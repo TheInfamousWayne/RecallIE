@@ -328,16 +328,27 @@ class HeatMaps(Thread):
         params = DocumentParameters()
         relationships_text_data = []
         
-        try:
-            relationships_text_data = wikipedia.page(self.message).content[:20000]
-        except wikipedia.DisambiguationError as e:
-            for n in e.options:
-                if self.u.get_id(n) == self.eid:
-                    self.message = n
-            relationships_text_data = wikipedia.page(self.message).content[:20000]
-        except wikipedia.exceptions.PageError as e:
-            self.error = e
-            print (e)
+        while True:
+            try:
+                relationships_text_data = wikipedia.page(self.message).content[:20000]
+                break
+            except wikipedia.DisambiguationError as e:
+                print(self.eid, self.message)
+                nameclash = True
+                for n in e.options:
+                    if self.u.get_id(n) == self.eid:
+                        if n == self.message:
+                            pass
+                        else:
+                            self.message = n
+                            nameclash = False
+                            break
+                if nameclash:
+                    self.message = " "
+            except wikipedia.exceptions.PageError as e:
+                self.error = self.u.id_to_name(self.eid) + " " + str(e)
+                print (self.error)
+                break
             
         params["content"] = relationships_text_data
         rel = []
