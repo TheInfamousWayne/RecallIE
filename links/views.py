@@ -32,7 +32,7 @@ def result(request, debug=False):
             result, message_id = u.Analyse(message_data)
             df = pd.DataFrame(result, columns=['Subject','Relationship','Object','Confidence'])
         
-            e1Grp = df.sort_values('Object', ascending=True).drop_duplicates().groupby(['Subject','Relationship']).agg(lambda x: list(x)).reset_index()
+            e1Grp = df.sort_values('Object', ascending=True).drop_duplicates(subset=['Subject','Relationship','Object']).groupby(['Subject','Relationship']).agg(lambda x: list(x)).reset_index()
             rows = []
             _ = e1Grp.apply(lambda row: [rows.append([row['Subject'],row['Relationship'], e2, e3]) for e2,e3 in zip(row.Object,row.Confidence)], axis=1)
             e1Grp = pd.DataFrame(rows, columns=e1Grp.columns).set_index(['Subject','Relationship'])
@@ -42,14 +42,16 @@ def result(request, debug=False):
 
             main_df = df[df['Subject'].apply(lambda row: u.get_id(row)) == message_id]
             other_df = df[~df.isin(main_df).all(1)]
-
-            main_df = main_df.sort_values('Object', ascending=True).drop_duplicates().groupby(['Subject','Relationship']).agg(lambda x: list(x))
-            main_df['Count'] = main_df['Object'].apply(lambda x: len(x))
-            main_df = main_df[[c for c in main_df if c not in ['Confidence']] + ['Confidence']]
             
-            other_df = other_df.sort_values('Object', ascending=True).drop_duplicates().groupby(['Subject','Relationship']).agg(lambda x: list(x))
-            other_df['Count'] = other_df['Object'].apply(lambda x: len(x))
-            other_df = other_df[[c for c in other_df if c not in ['Confidence']] + ['Confidence']]
+            if (not main_df.empty):
+                main_df = main_df.sort_values('Object', ascending=True).drop_duplicates().groupby(['Subject','Relationship']).agg(lambda x: list(x))
+                main_df['Count'] = main_df['Object'].apply(lambda x: len(x))
+                main_df = main_df[[c for c in main_df if c not in ['Confidence']] + ['Confidence']]
+            
+            if (not other_df.empty):
+                other_df = other_df.sort_values('Object', ascending=True).drop_duplicates().groupby(['Subject','Relationship']).agg(lambda x: list(x))
+                other_df['Count'] = other_df['Object'].apply(lambda x: len(x))
+                other_df = other_df[[c for c in other_df if c not in ['Confidence']] + ['Confidence']]
             ########################
 
             ###### ADDING GROUND TRUTH ######
@@ -58,7 +60,7 @@ def result(request, debug=False):
             
             ###### ADDING RECALL SCORE ######
             main_df = u.add_recall_score(main_df)
-            other_df = u.add_recall_score(other_df)
+            other_df = u.add_recall_score(other_df) 
             
             ###### DELETING THE OBJECT ######
             del u

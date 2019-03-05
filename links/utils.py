@@ -35,7 +35,11 @@ QUERY_DICT = {'Organization Founded By^-1':["""SELECT ?item ?itemLabel WHERE {
               'Person Employee or Member of^-1':["""SELECT ?item ?itemLabel WHERE {
                                           ?item wdt:P108 wd:%s.
                                           SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
-                                        }"""
+                                        }""",
+                                            """SELECT ?item ?itemLabel WHERE {
+                                          wd:%s wdt:P527 ?item.
+                                          SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+                                        }""" ## has Part ---> Band Members
                                                 ],
               'Person Employee or Member of':["""SELECT ?item ?itemLabel WHERE {
                                               wd:%s wdt:P108 ?item.
@@ -198,6 +202,8 @@ class Utils:
         return gt
 
     def add_ground_truth(self, df, debug=False):
+        if df.empty:
+            return df
         if debug:
             print (df)
         df = df.reset_index()
@@ -213,7 +219,7 @@ class Utils:
 
     def load_dict(self):
         try:
-            with open('./id_dict.pkl', 'rb') as fp:
+            with open('data/dumps/id_dict.pkl', 'rb') as fp:
                 self.id_dict = pickle.load(fp)
         except:
             print ("Creating a new Dictionary")
@@ -224,14 +230,14 @@ class Utils:
         with self.lock:
             old_dict = self.get_dict()
             self.id_dict = {**self.id_dict, **old_dict}
-            with open('./id_dict.pkl', 'wb') as fp:
+            with open('data/dumps/id_dict.pkl', 'wb') as fp:
                 pickle.dump(self.id_dict, fp, protocol=pickle.HIGHEST_PROTOCOL)
                 print("Saved")
 
 
     def get_dict(self):
         di = {}
-        with open('./id_dict.pkl', 'rb') as fp:
+        with open('data/dumps/id_dict.pkl', 'rb') as fp:
             di = pickle.load(fp)
         return di
 
@@ -280,27 +286,33 @@ class Utils:
 
 
 class HeatMaps(Thread):
-    def __init__(self, lock, eid=None, name=None):
+    def __init__(self, lock, relation='Educated at', eid=None, name=None, rel_dict={}):
         Thread.__init__(self)
         self.q1 = queue.Queue()
         self.q2 = queue.Queue()
         self.u = Utils()
         self.lock = lock
+        self.rel_dict = rel_dict
+        self.eid = eid
+        self.message = name
+        self.error = None
+        self.relation = relation
+        self.inverse = True if "^-1" in relation else False
         if name:
-            self.message = name
+            self.eid = self.u.get_id(name)
         else:
             self.message = self.u.id_to_name(eid)
-        time.sleep(0.01)
         self.start()
         
         
     def run(self):
-        a = Thread(target = self.Analyse, args = ())
-        b = Thread(target = self.ground_truth, args = ())
-        a.start()
-        b.start()
-        a.join()
-        b.join()
+        if self.eid not in self.rel_dict:
+            a = Thread(target = self.Analyse, args = ())
+            b = Thread(target = self.ground_truth, args = ())
+            a.start()
+            b.start()
+            a.join()
+            b.join()
         self.matrix_block()
 
 
@@ -310,7 +322,19 @@ class HeatMaps(Thread):
         api = API(user_key="89350904c7392a44f0f9019563be727a", service_url='https://api.rosette.com/rest/v1/')
 #         u = Utils()
         params = DocumentParameters()
-        relationships_text_data = wikipedia.page(self.message).content[:20000]
+        relationships_text_data = []
+        
+        try:
+            relationships_text_data = wikipedia.page(self.message).content[:20000]
+        except wikipedia.DisambiguationError as e:
+            for n in e.options:
+                if self.u.get_id(n) == self.eid:
+                    self.message = n
+            relationships_text_data = wikipedia.page(self.message).content[:20000]
+        except wikipedia.exceptions.PageError as e:
+            self.error = e
+            print (e)
+            
         params["content"] = relationships_text_data
         rel = []
         message_id = self.u.get_id(self.message)
@@ -320,43 +344,57 @@ class HeatMaps(Thread):
             RESULT = []
             with self.lock:
                 RESULT = api.relationships(params)
+            
+            args = ['arg1','arg2']
+            arg_to_split = 'arg2' if self.inverse else 'arg1'
+            args.remove(arg_to_split)
+            other_arg = args[0]
+            rel_to_compare = self.relation.split("^-1")[0]
                 
             for r in RESULT['relationships']:
-                if r['predicate'] == 'Educated at':
-                    arg_split = r['arg1'].split(" ")
-                    if any(s in arg_split for s in message_split):
-                        if self.u.get_id(r['arg1']) == message_id:
-                            pred_list.append(r['arg2'])
+                if r['predicate'] == rel_to_compare:
+                    arg_split = r[arg_to_split].split(" ") # Subject Split 
+                    if any(s in arg_split for s in message_split): # Searching for alias names
+                        if self.u.get_id(r[arg_to_split]) == message_id:
+                            pred_list.append(r[other_arg])
                             
             self.q1.put(set(pred_list))
         except RosetteException as exception:
             print(exception)
+            self.q1.put(set(pred_list))
 
 
     def ground_truth(self):
 #         u = Utils()
-        pgt = set(self.u.ground_truth('Educated at', self.message))
+        
+        pgt = set(self.u.ground_truth(self.relation, self.message))
         self.q2.put(pgt)
     
     
     def matrix_block(self):
-        q1 = self.q1.get()
-        q2 = self.q2.get()
-        #print(self.message, q1)
-        #print(self.message, q2)
-        self.tp = len(q2)
-        q1 = [self.u.get_id(i) for i in q1]
-        q2 = [self.u.get_id(i) for i in q2]
-        #print(self.message, q1)
-        #print(self.message, q2)
-        count = 0
-        for i in q1:
-            if i in q2:
-                count += 1
-        self.found = count
+        if self.eid in self.rel_dict:
+            self.pgt = self.rel_dict[self.eid]['PGT']
+            self.extracted = self.rel_dict[self.eid]['Extracted']
+            self.contained = self.rel_dict[self.eid]['Contained']
+        else:
+            q1 = self.q1.get() # Extracted from API
+            q2 = self.q2.get() # PGT
+            #print(self.message, q1)
+            #print(self.message, q2)
+            self.pgt = len(q2)
+            self.extracted = len(q1)
+            q1 = [self.u.get_id(i) for i in q1]
+            q2 = [self.u.get_id(i) for i in q2]
+            #print(self.message, q1)
+            #print(self.message, q2)
+            count = 0
+            for i in q1:
+                if i in q2:
+                    count += 1
+            self.contained = count
 
     def get_values(self):
-        return [self.found, self.tp]
+        if self.error:
+            raise Exception(self.error)
+        return [self.eid, self.message, self.extracted, self.contained, self.pgt]
     
-
-

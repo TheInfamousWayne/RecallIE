@@ -170,7 +170,7 @@ class Utils:
 
     def load_dict(self):
         try:
-            with open('./id_dict_personal.pkl', 'rb') as fp:
+            with open('data/dumps/id_dict_personal.pkl', 'rb') as fp:
                 self.id_dict = pickle.load(fp)
         except:
             print ("Creating a new Dictionary")
@@ -181,14 +181,14 @@ class Utils:
         with self.lock:
             old_dict = self.get_dict()
             self.id_dict = {**self.id_dict, **old_dict}
-            with open('./id_dict_personal.pkl', 'wb') as fp:
+            with open('data/dumps/id_dict_personal.pkl', 'wb') as fp:
                 pickle.dump(self.id_dict, fp, protocol=pickle.HIGHEST_PROTOCOL)
                 print("Saved")
 
 
     def get_dict(self):
         di = {}
-        with open('./id_dict_personal.pkl', 'rb') as fp:
+        with open('data/dumps/id_dict_personal.pkl', 'rb') as fp:
             di = pickle.load(fp)
         return di
 
