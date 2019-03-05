@@ -39,12 +39,16 @@ QUERY_DICT = {'Organization Founded By^-1':["""SELECT ?item ?itemLabel WHERE {
                                             """SELECT ?item ?itemLabel WHERE {
                                           wd:%s wdt:P527 ?item.
                                           SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
-                                        }""" ## has Part ---> Band Members
+                                        }""" 
                                                 ],
               'Person Employee or Member of':["""SELECT ?item ?itemLabel WHERE {
                                               wd:%s wdt:P108 ?item.
                                               SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
-                                            }"""
+                                            }""",
+                                              """SELECT ?item ?itemLabel WHERE {
+                                              wd:%s wdt:P463 ?item.
+                                              SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+                                            }"""## member of ---> Band Members
                                             ],
               'Person Place of Birth':["""SELECT ?item ?itemLabel WHERE {
                                               wd:%s wdt:P19 ?item.
