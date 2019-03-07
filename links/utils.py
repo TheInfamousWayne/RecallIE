@@ -413,3 +413,51 @@ class HeatMaps(Thread):
             raise Exception(self.error)
         return [self.eid, self.message, self.extracted, self.contained, self.pgt]
     
+    
+    
+    
+class Distribution(Thread):
+    def __init__(self, eid=None, name=None, lock=None, rel_dict={}):
+        Thread.__init__(self)
+        self.doc_len = None
+        self.u = Utils()
+        self.eid = eid
+        self.message = name
+        self.error = None
+        if name:
+            self.eid = self.u.get_id(name)
+        else:
+            self.message = self.u.id_to_name(eid)
+        if eid in rel_dict:
+            self.doc_len = rel_dict[eid]['Doc_Length']
+            return
+        self.start()
+    
+    def run(self):
+        while True:
+            try:
+                document = wikipedia.page(self.message).content
+                self.doc_len = len(document)
+                break
+            except wikipedia.DisambiguationError as e:
+                print(self.eid, self.message)
+                nameclash = True
+                for n in e.options:
+                    if self.u.get_id(n) == self.eid:
+                        if n == self.message:
+                            pass
+                        else:
+                            self.message = n
+                            nameclash = False
+                            break
+                if nameclash:
+                    self.message = " "
+            except wikipedia.exceptions.PageError as e:
+                self.error = self.u.id_to_name(self.eid) + " " + str(e)
+                print (self.error)
+                break
+    
+    def get_values(self):
+        if self.error:
+            raise Exception(self.error)
+        return [self.eid, self.message, self.doc_len]

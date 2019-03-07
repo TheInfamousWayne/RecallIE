@@ -44,7 +44,15 @@ def result(request):
 				other_df = other_df[[c for c in other_df if c not in ['Confidence']] + ['Confidence']]
 			#print("4")            
 	        ##############################
+
+	        ###### ADDING RECALL SCORE ######
+			main_df = u.add_recall_score(main_df)
+			other_df = u.add_recall_score(other_df)
+
+            ###### DELETING THE OBJECT ######
 			del u
+			#################################
+			
 			with pd.option_context('display.max_colwidth', -1):
 				main_df = main_df.to_html()
 				other_df = other_df.to_html()

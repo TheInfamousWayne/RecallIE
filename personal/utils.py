@@ -102,6 +102,7 @@ import pandas as pd
 import wikipedia
 import requests
 import pickle
+import numpy as np
 from threading import RLock
 
 class Utils:
@@ -165,6 +166,10 @@ class Utils:
         df['Count_GT'] = df['Ground Truth'].apply(lambda x: len(x))
         df = df.set_index(['Subject','Relationship'])
 #         save_dict()
+        return df
+
+    def add_recall_score(self, df):
+        df['Recall Prediction'] = np.random.randint(0, 100, df.shape[0])/100
         return df
 
 
