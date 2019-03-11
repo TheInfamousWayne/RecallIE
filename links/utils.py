@@ -249,7 +249,7 @@ class Utils:
     def Analyse(self, message, alt_url='https://api.rosette.com/rest/v1/'):
         """ Run the example """
         # Create an API instance
-        api = API(user_key="89350904c7392a44f0f9019563be727a", service_url=alt_url)
+        api = API(user_key="969b3593686184bb42803d8da453f119", service_url=alt_url)
 
         # Set selected API options.
         # For more information on the functionality of these
@@ -305,7 +305,7 @@ class HeatMaps(Thread):
         if name:
             self.eid = self.u.get_id(name)
         else:
-            self.message = self.u.id_to_name(eid)
+            self.message = str(self.u.id_to_name(eid))
         self.start()
         
         
@@ -323,7 +323,7 @@ class HeatMaps(Thread):
     def Analyse(self):
         """ Run the example """
         # Create an API instance
-        api = API(user_key="89350904c7392a44f0f9019563be727a", service_url='https://api.rosette.com/rest/v1/')
+        api = API(user_key="969b3593686184bb42803d8da453f119", service_url='https://api.rosette.com/rest/v1/')
 #         u = Utils()
         params = DocumentParameters()
         relationships_text_data = []
@@ -350,12 +350,13 @@ class HeatMaps(Thread):
                 print (self.error)
                 break
             
-        params["content"] = relationships_text_data
-        rel = []
-        message_id = self.u.get_id(self.message)
-        message_split = self.message.split(" ")
-        pred_list = []
+        
         try:
+            params["content"] = relationships_text_data
+            rel = []
+            message_id = self.u.get_id(self.message)
+            message_split = self.message.split(" ")
+            pred_list = []
             RESULT = []
             with self.lock:
                 RESULT = api.relationships(params)
@@ -376,6 +377,11 @@ class HeatMaps(Thread):
             self.q1.put(set(pred_list))
         except RosetteException as exception:
             print(exception)
+            self.error = exception
+            self.q1.put(set(pred_list))
+        except Exception as e:
+            print(e, self.message)
+            self.error = e
             self.q1.put(set(pred_list))
 
 
@@ -461,3 +467,56 @@ class Distribution(Thread):
         if self.error:
             raise Exception(self.error)
         return [self.eid, self.message, self.doc_len]
+    
+    
+class MissingExtractions(Thread):
+    def __init__(self, eid=None, name=None, relation=None, rel_dict={}):
+        Thread.__init__(self)
+        self.missing = None
+        self.u = Utils()
+        self.relation = relation
+        self.eid = eid
+        self.message = name
+        self.error = None
+        if not eid:
+            self.eid = self.u.get_id(name)
+        if not name:
+            self.message = self.u.id_to_name(eid)
+        if eid in rel_dict:
+            self.missing = rel_dict[eid]['Missing']
+            return
+        self.start()
+    
+    def run(self):
+        while True:
+            try:
+                document = wikipedia.page(self.message).content
+                pgt = set(self.u.ground_truth(self.relation, self.message))
+                count = 0
+                for item in pgt:
+                    if document.find(item) == -1:
+                        count += 1
+                self.missing = count
+                break
+            except wikipedia.DisambiguationError as e:
+                print(self.eid, self.message)
+                nameclash = True
+                for n in e.options:
+                    if self.u.get_id(n) == self.eid:
+                        if n == self.message:
+                            pass
+                        else:
+                            self.message = n
+                            nameclash = False
+                            break
+                if nameclash:
+                    self.message = " "
+            except wikipedia.exceptions.PageError as e:
+                self.error = self.u.id_to_name(self.eid) + " " + str(e)
+                print (self.error)
+                break
+    
+    def get_values(self):
+        if self.error:
+            raise Exception(self.error)
+        return [self.eid, self.message, self.missing]
