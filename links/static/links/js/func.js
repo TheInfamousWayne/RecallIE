@@ -68,3 +68,9 @@ function extract() {
         
     })
 }
+
+
+function eval(e) {
+    document.getElementById('searchbar').value = e.innerHTML;
+    extract();
+}

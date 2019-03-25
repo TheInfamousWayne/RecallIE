@@ -78,6 +78,14 @@ td:hover{
   }
 }
 
+/**
+ * ==============================================
+ * List Items
+ * ==============================================
+ */
+li:hover{
+ cursor: pointer;
+}
 
 
 </style>
@@ -112,7 +120,7 @@ td:hover{
 				  </center>
 			  </div>
 			  <div class="col-sm-10">
-				  <br>
+				  <br><br>
 				  <center>
 				  <h3>Recall-Aware Information Extraction</h3>
 				  </center>
@@ -151,7 +159,16 @@ td:hover{
         <button class="btn btn-primary" onclick="extract()" >Extract</button>
         <a class="btn btn-dark" role="button" href="/">Back</a>
 
-
+        <hr>
+        <div class="col-sm-10">
+          <h5> Examples </h5>
+          <ul id="linkeg">
+            <li id='l' onclick="eval(this)">Steve Jobs</li>
+            <li id='l' onclick="eval(this)">Hillary Clinton</li>
+            <li id='l' onclick="eval(this)">Gerhard Weikum</li>
+          </ul>
+        </div>
+        <hr>
         
 
         <div class="col-sm-10">

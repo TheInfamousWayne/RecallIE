@@ -47,3 +47,9 @@ function extract() {
         
     })
 }
+
+
+function eval(e) {
+    document.getElementById('texttoanalyse').value = e.innerHTML;
+    extract();
+}

@@ -33,7 +33,14 @@
   }
 }
 
-
+/**
+ * ==============================================
+ * List Items
+ * ==============================================
+ */
+li:hover{
+ cursor: pointer;
+}
 
 </style>
 <!-- ----------------------------------------------------------------------------------------- -->
@@ -66,7 +73,7 @@
 				  </center>
 			  </div>
 			  <div class="col-sm-10">
-				  <br>
+				  <br><br>
 				  <center>
 				  <h3>Recall-Aware Information Extraction</h3>
 				  </center>
@@ -106,6 +113,16 @@
         <button class="btn btn-primary" onclick="extract()" >Extract</button>
         <a class="btn btn-dark" role="button" href="/">Back</a>
         <!-- </center> -->
+
+        <hr>
+        <div class="col-sm-10">
+          <h5> Examples </h5>
+          <ul id="madeupeg">
+            <li id='m' onclick="eval(this)">Mary lives in Paris. Mary has two children, James and Lisa. Mary is married to Fred. Mary was also married to Frank once.</li>
+            <li id='m' onclick="eval(this)">Steve Jobs was founder of Apple. Steve Jobs lived in California. He was also CEO of AOL. He graduated from Saarland University and dropped out of the University of Iceland.</li>
+          </ul>
+        </div>
+        <hr>
            
 
 

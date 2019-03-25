@@ -246,7 +246,7 @@ class Utils:
         return di
 
 
-    def Analyse(self, message, alt_url='https://api.rosette.com/rest/v1/'):
+    def Analyse(self, message, doc=None, lock=None, alt_url='https://api.rosette.com/rest/v1/'):
         """ Run the example """
         # Create an API instance
         api = API(user_key="969b3593686184bb42803d8da453f119", service_url=alt_url)
@@ -261,16 +261,23 @@ class Utils:
         # Opening the ID Dictionary
 #         load_dict()
         ### Will Close after Analysis of the document is completed
+    
+        if lock == None:
+            lock = Lock()
 
         params = DocumentParameters()
-        relationships_text_data = wikipedia.page(message).content[:20000]
+        if doc:
+            relationships_text_data = doc[:20000]
+        else:
+            relationships_text_data = wikipedia.page(message).content[:20000]
         params["content"] = relationships_text_data
         rel = []
         message_id = self.get_id(message)
         message_split = message.split(" ")
         try:
-            RESULT = api.relationships(params)
-            #print(RESULT)
+            with lock:
+                RESULT = api.relationships(params)
+            
             for r in RESULT['relationships']:
                 arg2_split = r['arg2'].split(" ")
                 confidence = '?'
@@ -520,3 +527,47 @@ class MissingExtractions(Thread):
         if self.error:
             raise Exception(self.error)
         return [self.eid, self.message, self.missing]
+    
+
+class News(Thread):
+    def __init__(self, lock=None, link=None, name=None, shared_df=None):
+        Thread.__init__(self)
+        self.df = pd.DataFrame()
+        self.main_df = pd.DataFrame()
+        self.u = Utils()
+        self.lock = lock
+        self.link = link
+        self.eid = self.u.get_id(name)
+        self.doc = ""
+        self.message = name
+        self.start()
+        
+        
+    def run(self):
+        a = Thread(target = self.get_link_text, args = ())
+        a.start()
+        a.join()
+
+        
+    def get_link_text(self):
+        r = requests.get(self.link)
+        content = r.text
+        doc_summary = []
+        soup = BeautifulSoup(content, "html.parser")
+        paras = soup.findAll("p")
+        for p in paras:
+            doc_summary.append(p.text)
+        s = " ".join(doc_summary)
+        s = " ".join(s.split())
+        self.doc = s
+        ## Analysing the link text
+        res,_ = self.u.Analyse(message=self.message, doc=self.doc, lock=self.lock)
+        self.df = pd.DataFrame(res, columns=['Subject','Relationship','Object','Confidence'])
+        self.main_df = self.df[self.df['Subject'].apply(lambda row: self.u.get_id(row)) == self.eid]
+        self.main_df['Subject'] = self.message
+    
+    def get_df(self):
+        return self.df
+    
+    def get_main_df(self):
+        return self.main_df
