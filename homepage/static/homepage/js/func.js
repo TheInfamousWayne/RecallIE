@@ -29,4 +29,8 @@ function store(e) {
 
 function default_value() {
     localStorage.setItem("li", "");
+    localStorage.setItem("entity", "");
 }
+    
+
+

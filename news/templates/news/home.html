@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- ----------------------------------  CSS  ------------------------------------------------ -->
+<style>
+
+/**
+ * ==============================================
+ * For Hovering over the Tables
+ * ==============================================
+ */
+
+table {
+  table-layout: auto;
+  width: 100%;
+}
+
+td {
+  border: 1px solid #999;
+  padding: 10px;
+  position: relative;
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;         /* <- this does seem to be required */
+  text-overflow: ellipsis;
+}
+
+td:hover{
+    border: 1px solid #999;
+    padding: 10px;
+    position: relative;
+    text-overflow:clip;
+    white-space: normal;
+    background-color: #ffa;
+}
+
+.loader {
+  border: 16px solid #f3f3f3; /* Light grey */
+  border-top: 16px solid #3498db; /* Blue */
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
+/**
+ * ==============================================
+ * Dot Carousel
+ * ==============================================
+ */
+.dot-carousel {
+  position: relative;
+  left: -9850px;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color: #9880ff;
+  color: #9880ff;
+  box-shadow: 9984px 0 0 0 #9880ff, 9999px 0 0 0 #9880ff, 10014px 0 0 0 #9880ff;
+  animation: dotCarousel 1.5s infinite linear;
+}
+
+@keyframes dotCarousel {
+  0% {
+    box-shadow: 9984px 0 0 -1px #9880ff, 9999px 0 0 1px #9880ff, 10014px 0 0 -1px #9880ff;
+  }
+  50% {
+    box-shadow: 10014px 0 0 -1px #9880ff, 9984px 0 0 -1px #9880ff, 9999px 0 0 1px #9880ff;
+  }
+  100% {
+    box-shadow: 9999px 0 0 1px #9880ff, 10014px 0 0 -1px #9880ff, 9984px 0 0 -1px #9880ff;
+  }
+}
+
+/**
+ * ==============================================
+ * List Items
+ * ==============================================
+ */
+li:hover{
+ cursor: pointer;
+}
+
+</style>
+<!-- ----------------------------------------------------------------------------------------- -->
+
+<head>
+	<title>Recall IE</title>
+	<meta charset="utf-8" />
+	{% load static %}
+	<!-- <link rel="stylesheet" href="{% static 'links/css/three-dots.css' %}"> -->
+	<link rel="stylesheet" href="{% static 'links/css/bootstrap.min.css' %}" type = "text/css"/>
+  <script type="text/javascript" src="{% static 'news/js/func.js' %}"></script>
+  <script type="text/javascript" src="{% static 'news/js/jquery-1.7.1.min.js' %}"></script>
+
+
+	<meta name="viewport" content = "width=device-width, initial-scale=1.0">
+	
+	<style type="text/css">
+		body {
+		  height:100%
+		}
+	</style>
+</head>
+
+<body class="body" style="background-color:#f6f6f6" onload="customize()">
+	<div class="container-fluid" style="min-height:95%; ">
+        
+		<div class="row">
+			  <div class="col-sm-2">
+				  <br>
+				  <center>
+					<img src="{% static 'personal/img/mpi.jpg' %}" class="responsive-img" style='max-height:100px;' alt="face">
+				  </center>
+			  </div>
+			  <div class="col-sm-10">
+				  <br><br>
+				  <center>
+				  <h2>Recall-Aware Information Extraction</h2>
+				  </center>
+                 <!--  <br>
+                  <center>
+                  <button type="button" class="btn btn-dark">Train Classifier</button>
+                  </center> -->
+			  </div>
+		</div><hr>
+
+    <div class="col">    
+        <div class="card" style="width: 18rem;">
+          <div class="card-body" >
+            <h5 class="card-title" >Entities</h5>
+            <h6 class="card-subtitle mb-2 text-muted">Select one of the following</h6>
+          </div>
+        </div>
+        <hr>
+        <div id='entity_list' style="overflow-y: scroll; max-height:800px;">
+          {% block content %}
+          {% endblock %}
+        </div>
+        <hr>
+    </div>
+    <div class='col'>
+        <div id='back_buttons'>
+          <a class="btn btn-dark" role="button" href="/">Back</a>
+        </div>
+
+        <div class="col-sm-10">
+          <center>
+    			<div class='container-fluid' id="response" >
+    			</div>
+          </center>
+        </div>
+
+        <div class="col-sm-10">
+          <center>
+    			<div class='container-fluid' id="response2">
+    			</div>
+          </center>
+        </div>
+
+        <div class="col-sm-10">
+          <center>
+    			<div class='container-fluid' id="debugging">
+    			</div>
+          </center>
+        </div>
+	
+    </div>
+  </div>
+
+
+
+
+
+  <!-- Button trigger modal 
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#recall_df">
+  Launch demo modal
+</button> -->
+
+<!-- Modal -->
+<div class="modal fade bd-example-modal-lg" id="recall_df" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content" style="text-align:center; ">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">Recall Prediction</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id='modal_body'>
+      <!-- Get Info From Python File -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>    
+	
+</body>
+
+</html>

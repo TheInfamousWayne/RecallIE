@@ -36,6 +36,13 @@ li:hover{
  cursor: pointer;
 }
 
+<script>
+($('#myList a').on('click', function (e) {
+  e.preventDefault()
+  $(this).tab('show')
+}))
+</script>
+
 </style>
 <!-- ----------------------------------------------------------------------------------------- -->
 
@@ -46,6 +53,11 @@ li:hover{
 	<link rel="stylesheet" href="{% static 'homepage/css/bootstrap.min.css' %}" type = "text/css"/>
     <script type="application/javascript" src="{% static 'homepage/js/func.js' %}"></script>
     <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+
+    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+ 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+ -->
 
 	<meta name="viewport" content = "width=device-width, initial-scale=1.0">
 	
@@ -58,32 +70,50 @@ li:hover{
 
 <body class="body" style="background-color:#f6f6f6" onload="default_value()">
 
-	<div class="container-fluid" style="min-height:95%; ">
-        
+	<!-- <div class="container-fluid" style="min-height:95%; ">
+		<div class='row container'>
+			<div>
+				<br>  
+				<img src="{% static 'homepage/img/mpi.jpg' %}" class="responsive-img" style='max-height:100px;' alt="face">
+			</div>
+			<div class="justify-content-center">
+				<br><br>
+				<center>
+				  	<h2 align="center">Recall-Aware Information Extraction</h2>
+				  </center>
+			  </div>
+		</div>
+		<hr><br> -->
+
+	<div class="container-fluid" style="min-height:95%; "> 
 		<div class="row">
 			  <div class="col-sm-2">
-				  <br>
-				  <center>
+				  	<br>
 					<img src="{% static 'homepage/img/mpi.jpg' %}" class="responsive-img" style='max-height:100px;' alt="face">
-				  </center>
 			  </div>
 			  <div class="col-sm-10">
 				  <br><br>
 				  <center>
-				  <h3>Recall-Aware Information Extraction</h3>
+				  <h2>Recall-Aware Information Extraction</h2>
 				  </center>
-                  <!-- <br>
-                  <center>
-                  <button type="button" class="btn btn-dark">Train Classifier</button>
-                  </center> -->
-
 			  </div>
 		</div>
-		<hr>
 
 
 	    <div class="container">
 		    <div class="row mt-5 justify-content-center" style="text-align:center; ">
+		    	<div class="card" style="width: 28rem; height: 15rem;">
+				  <div class="card-body">
+				    <h4 class="card-title">NEWS</h4>
+				    <hr>
+				    <p class="card-text">Search among the news articles.</p>
+				    <a href="/news/" class="btn btn-primary">Start</a>
+				  </div>
+				</div>
+
+			</div>
+			<div class="row mt-5 justify-content-center" style="text-align:center; ">
+
 		        <div class="card" style="width: 18rem;">
 				  <div class="card-body">
 				    <h5 class="card-title">A. Analyse Custom Text</h5>
@@ -100,13 +130,7 @@ li:hover{
 				  </div>
 				</div>
 
-		        <div class="card" style="width: 18rem; ">
-				  <div class="card-body">
-				    <h5 class="card-title">C. View Precomputed Text Segments</h5>
-				    <p class="card-text">Enter for relation extraction and recall awareness.</p>
-				    <a href="/custom/" class="btn btn-primary">Start</a>
-				  </div>
-				</div>
+		        
 
 		    </div>
 		</div>
@@ -131,11 +155,13 @@ li:hover{
 				  <li id='l' onclick="store(this)">Gerhard Weikum</li>
 				</ul>
 	        </div> -->
-        
-        
+
 
     </div>
-    
+ 
+
+
+
     <div style="position: fixed; bottom: 0; right: 0">
 	    <div class="chip">Vaibhav</div>
 	    <div class="chip">Simon</div>
