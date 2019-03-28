@@ -4,7 +4,7 @@ function customize() {
 
 function button_load() {
     value = localStorage.getItem("entity");
-    localStorage.setItem("entity", "");
+    localStorage.setItem("parent_entity",value);
     console.log(value);
     button_string = '';
     if (value == "") {
@@ -14,7 +14,8 @@ function button_load() {
     }
     else {
         button_string = '<a class="btn btn-dark" role="button" href="/news/" >Back</a>\
-                        <a class="btn btn-dark" role="button" href="/">Home</a>';
+                        <a class="btn btn-dark" role="button" href="/">Home</a>\
+                        <a class="btn btn-warning" role="button" data-toggle="modal" data-target="#recall_df">See Last Recall Output</a>';
     }
     document.getElementById('back_buttons').innerHTML = button_string;
 }
@@ -27,12 +28,14 @@ function refresh() {
 
 
 function get_recall(link) {
-    localStorage.setItem("entity", "headline");
+    document.getElementById('modal_body').innerHTML = '<br><br><centre> <div class="dot-carousel"> </div> </centre>' ;
+    entity = localStorage.getItem("parent_entity");
     console.log(link);
     $.ajax({
         url: 'result',
         data: {
             'link': link,
+            'query': entity
         },
         dataType: 'json',
         success: function(data){

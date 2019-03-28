@@ -103,6 +103,17 @@ QUERY_DICT = {'Organization Founded By^-1':["""SELECT ?item ?itemLabel WHERE {
 
 
 
+PERSON_RELATIONS = ['Educated at', 'Citizen of', 'Person Employee or Member of', 'Organization top employees^-1',\
+                    'Person Current and Past Location of Residence', 'Person Parents', 'Person Parents^-1',\
+                    'Person Place of Birth', 'Person Siblings', 'Person Spouse']
+ORG_RELATION =     ['Organization Founded By', 'Organization Collaboration', 'Organization Collaboration^-1',\
+                    'Organization Headquarters', 'Organization Subsidiary Of', 'Organization Subsidiary Of^-1',\
+                    'Organization top employees', 'Person Employee or Member of^-1', 'Organization Acquired By^-1',\
+                    'Organization Acquired By', 'Organization Provider To', 'Organization Provider To^-1']
+COMMON_RELATION =  ['Organization Founded By^-1']
+
+
+
 
 from SPARQLWrapper import SPARQLWrapper, JSON   
 from rosette.api import API, DocumentParameters, RosetteException
@@ -123,6 +134,9 @@ from lxml import html
 from datetime import date
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+
+
+
 
 def load_headline_dict(query):
     path = 'data/dumps/{}_headline_dict.pkl'.format(query)

@@ -4,7 +4,7 @@ function customize() {
 
 function button_load() {
     value = localStorage.getItem("entity");
-    localStorage.setItem("entity", "");
+    localStorage.setItem("parent_entity",value);
     console.log(value);
     button_string = '';
     if (value == "") {
@@ -29,17 +29,18 @@ function refresh() {
 
 function get_recall(link) {
     document.getElementById('modal_body').innerHTML = '<br><br><centre> <div class="dot-carousel"> </div> </centre>' ;
-    localStorage.setItem("entity", "headline");
+    entity = localStorage.getItem("parent_entity");
     console.log(link);
     $.ajax({
         url: 'result',
         data: {
             'link': link,
+            'query': entity
         },
         dataType: 'json',
         success: function(data){
             console.log(data['news']);
-            document.getElementById('modal_body').innerHTML = data['news'];
+            document.getElementById('modal_body').innerHTML = data['news_df'];
         }
         
     })

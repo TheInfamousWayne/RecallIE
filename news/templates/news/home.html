@@ -87,17 +87,41 @@ li:hover{
  cursor: pointer;
 }
 
+/**
+ * ==============================================
+ * Modal Width
+ * ==============================================
+ */
+.modal-ku {
+  width: 600px;
+  margin: auto;
+}
+.modal-dialog{
+    display: table;
+    width: auto;
+    height: auto;
+    max-height: 100%; 
+}
+
 </style>
+
 <!-- ----------------------------------------------------------------------------------------- -->
+
+
+
 
 <head>
 	<title>Recall IE</title>
 	<meta charset="utf-8" />
 	{% load static %}
 	<!-- <link rel="stylesheet" href="{% static 'links/css/three-dots.css' %}"> -->
+  <script type="text/javascript" src="{% static 'news/js/jquery-1.7.1.min.js' %}"></script>
 	<link rel="stylesheet" href="{% static 'links/css/bootstrap.min.css' %}" type = "text/css"/>
   <script type="text/javascript" src="{% static 'news/js/func.js' %}"></script>
-  <script type="text/javascript" src="{% static 'news/js/jquery-1.7.1.min.js' %}"></script>
+ 
+ <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+ <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+ <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>    
 
 
 	<meta name="viewport" content = "width=device-width, initial-scale=1.0">
@@ -184,8 +208,8 @@ li:hover{
 </button> -->
 
 <!-- Modal -->
-<div class="modal fade bd-example-modal-lg" id="recall_df" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+<div class="modal fade " id="recall_df" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog " role="document" >
     <div class="modal-content" style="text-align:center; ">
       <div class="modal-header">
         <h5 class="modal-title" id="exampleModalLongTitle">Recall Prediction</h5>
@@ -206,9 +230,7 @@ li:hover{
 
 
 
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>    
+
 	
 </body>
 
