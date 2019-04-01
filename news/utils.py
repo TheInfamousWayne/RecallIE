@@ -136,6 +136,23 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+def count_confidence(main_df):
+	    if (not main_df.empty):
+	        main_df = main_df.sort_values('Object', ascending=True).drop_duplicates().groupby(['Subject','Relationship']).agg(lambda x: list(x))
+	        main_df['Object'] = main_df['Object'].agg(lambda x: x if x != [''] else [])
+	        main_df['Count'] = main_df['Object'].apply(lambda x: len(x))
+	        #main_df = main_df[[c for c in main_df if c not in ['Confidence']] + ['Confidence']]
+	    return main_df
+
+def load_useful100(query):
+    path = 'data/dumps/{}_useful100.pkl'.format(query)
+    try:
+        with open(path, 'rb') as fp:
+            useful100 = pickle.load(fp)
+    except:
+        print ("No file exists. Creating a new one.")
+        useful100 = {}
+    return useful100
 
 
 def load_headline_dict(query):
@@ -350,245 +367,14 @@ class Utils:
             print(exception)
 
 
-class HeatMaps(Thread):
-    def __init__(self, lock, relation='Educated at', eid=None, name=None, rel_dict={}):
-        Thread.__init__(self)
-        self.q1 = queue.Queue()
-        self.q2 = queue.Queue()
-        self.u = Utils()
-        self.lock = lock
-        self.rel_dict = rel_dict
-        self.eid = eid
-        self.message = name
-        self.error = None
-        self.relation = relation
-        self.inverse = True if "^-1" in relation else False
-        if name:
-            self.eid = self.u.get_id(name)
-        else:
-            self.message = str(self.u.id_to_name(eid))
-        self.start()
-        
-        
-    def run(self):
-        if self.eid not in self.rel_dict:
-            a = Thread(target = self.Analyse, args = ())
-            b = Thread(target = self.ground_truth, args = ())
-            a.start()
-            b.start()
-            a.join()
-            b.join()
-        self.matrix_block()
-
-
-    def Analyse(self):
-        """ Run the example """
-        # Create an API instance
-        api = API(user_key="969b3593686184bb42803d8da453f119", service_url='https://api.rosette.com/rest/v1/')
-#         u = Utils()
-        params = DocumentParameters()
-        relationships_text_data = []
-        
-        while True:
-            try:
-                relationships_text_data = wikipedia.page(self.message).content[:20000]
-                break
-            except wikipedia.DisambiguationError as e:
-                print(self.eid, self.message)
-                nameclash = True
-                for n in e.options:
-                    if self.u.get_id(n) == self.eid:
-                        if n == self.message:
-                            pass
-                        else:
-                            self.message = n
-                            nameclash = False
-                            break
-                if nameclash:
-                    self.message = " "
-            except wikipedia.exceptions.PageError as e:
-                self.error = self.u.id_to_name(self.eid) + " " + str(e)
-                print (self.error)
-                break
-            
-        
-        try:
-            params["content"] = relationships_text_data
-            rel = []
-            message_id = self.u.get_id(self.message)
-            message_split = self.message.split(" ")
-            pred_list = []
-            RESULT = []
-            with self.lock:
-                RESULT = api.relationships(params)
-            
-            args = ['arg1','arg2']
-            arg_to_split = 'arg2' if self.inverse else 'arg1'
-            args.remove(arg_to_split)
-            other_arg = args[0]
-            rel_to_compare = self.relation.split("^-1")[0]
-                
-            for r in RESULT['relationships']:
-                if r['predicate'] == rel_to_compare:
-                    arg_split = r[arg_to_split].split(" ") # Subject Split 
-                    if any(s in arg_split for s in message_split): # Searching for alias names
-                        if self.u.get_id(r[arg_to_split]) == message_id:
-                            pred_list.append(r[other_arg])
-                            
-            self.q1.put(set(pred_list))
-        except RosetteException as exception:
-            print(exception)
-            self.error = exception
-            self.q1.put(set(pred_list))
-        except Exception as e:
-            print(e, self.message)
-            self.error = e
-            self.q1.put(set(pred_list))
-
-
-    def ground_truth(self):
-#         u = Utils()
-        
-        pgt = set(self.u.ground_truth(self.relation, self.message))
-        self.q2.put(pgt)
-    
-    
-    def matrix_block(self):
-        if self.eid in self.rel_dict:
-            self.pgt = self.rel_dict[self.eid]['PGT']
-            self.extracted = self.rel_dict[self.eid]['Extracted']
-            self.contained = self.rel_dict[self.eid]['Contained']
-        else:
-            q1 = self.q1.get() # Extracted from API
-            q2 = self.q2.get() # PGT
-            #print(self.message, q1)
-            #print(self.message, q2)
-            self.pgt = len(q2)
-            self.extracted = len(q1)
-            q1 = [self.u.get_id(i) for i in q1]
-            q2 = [self.u.get_id(i) for i in q2]
-            #print(self.message, q1)
-            #print(self.message, q2)
-            count = 0
-            for i in q1:
-                if i in q2:
-                    count += 1
-            self.contained = count
-
-    def get_values(self):
-        if self.error:
-            raise Exception(self.error)
-        return [self.eid, self.message, self.extracted, self.contained, self.pgt]
-    
-    
-    
-    
-class Distribution(Thread):
-    def __init__(self, eid=None, name=None, lock=None, rel_dict={}):
-        Thread.__init__(self)
-        self.doc_len = None
-        self.u = Utils()
-        self.eid = eid
-        self.message = name
-        self.error = None
-        if name:
-            self.eid = self.u.get_id(name)
-        else:
-            self.message = self.u.id_to_name(eid)
-        if eid in rel_dict:
-            self.doc_len = rel_dict[eid]['Doc_Length']
-            return
-        self.start()
-    
-    def run(self):
-        while True:
-            try:
-                document = wikipedia.page(self.message).content
-                self.doc_len = len(document)
-                break
-            except wikipedia.DisambiguationError as e:
-                print(self.eid, self.message)
-                nameclash = True
-                for n in e.options:
-                    if self.u.get_id(n) == self.eid:
-                        if n == self.message:
-                            pass
-                        else:
-                            self.message = n
-                            nameclash = False
-                            break
-                if nameclash:
-                    self.message = " "
-            except wikipedia.exceptions.PageError as e:
-                self.error = self.u.id_to_name(self.eid) + " " + str(e)
-                print (self.error)
-                break
-    
-    def get_values(self):
-        if self.error:
-            raise Exception(self.error)
-        return [self.eid, self.message, self.doc_len]
-    
-    
-class MissingExtractions(Thread):
-    def __init__(self, eid=None, name=None, relation=None, rel_dict={}):
-        Thread.__init__(self)
-        self.missing = None
-        self.u = Utils()
-        self.relation = relation
-        self.eid = eid
-        self.message = name
-        self.error = None
-        if not eid:
-            self.eid = self.u.get_id(name)
-        if not name:
-            self.message = self.u.id_to_name(eid)
-        if eid in rel_dict:
-            self.missing = rel_dict[eid]['Missing']
-            return
-        self.start()
-    
-    def run(self):
-        while True:
-            try:
-                document = wikipedia.page(self.message).content
-                pgt = set(self.u.ground_truth(self.relation, self.message))
-                count = 0
-                for item in pgt:
-                    if document.find(item) == -1:
-                        count += 1
-                self.missing = count
-                break
-            except wikipedia.DisambiguationError as e:
-                print(self.eid, self.message)
-                nameclash = True
-                for n in e.options:
-                    if self.u.get_id(n) == self.eid:
-                        if n == self.message:
-                            pass
-                        else:
-                            self.message = n
-                            nameclash = False
-                            break
-                if nameclash:
-                    self.message = " "
-            except wikipedia.exceptions.PageError as e:
-                self.error = self.u.id_to_name(self.eid) + " " + str(e)
-                print (self.error)
-                break
-    
-    def get_values(self):
-        if self.error:
-            raise Exception(self.error)
-        return [self.eid, self.message, self.missing]
-    
 
 class News(Thread):
-    def __init__(self, lock=None, link=None, name=None, shared_df=None):
+    def __init__(self, lock=None, link=None, name=None, shared_df=None, headline=None):
         Thread.__init__(self)
         self.df = pd.DataFrame()
         self.main_df = pd.DataFrame()
         self.u = Utils()
+        self.headline = headline
         self.lock = lock
         self.link = link
         self.eid = self.u.get_id(name)
@@ -624,4 +410,4 @@ class News(Thread):
         return self.df
     
     def get_main_df(self):
-        return self.main_df
+        return self.headline, self.link, self.main_df

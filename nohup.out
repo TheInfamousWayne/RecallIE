@@ -3149,3 +3149,25 @@ wikipedia.exceptions.WikipediaException: An unknown error occured: "The "srsearc
 [21/Feb/2019 21:42:19] "GET /links/result?searchbar=Gerhard+Weikum HTTP/1.1" 200 7301
 [21/Feb/2019 21:42:36] "GET / HTTP/1.1" 200 3425
 [21/Feb/2019 21:42:36] "GET /static/homepage/css/bootstrap.min.css HTTP/1.1" 200 114688
+Traceback (most recent call last):
+  File "make_dumps.py", line 148, in <module>
+    make_headline_dict(query)
+  File "make_dumps.py", line 63, in make_headline_dict
+    r.get("https://www.google.com/search?q={}&hl=en-US&gl=US&source=lnt&tbs=cdr%3A1%2Ccd_min%3A{}%2F{}%2F{}%2Ccd_max%3A{}%2F{}%2F{}&tbm=nws".format(                            query,m1,d1,y1,mm,dd,yy))
+  File "c:\Users\Bhavya\Anaconda3\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 333, in get
+    self.execute(Command.GET, {'url': url})
+  File "c:\Users\Bhavya\Anaconda3\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 321, in execute
+    self.error_handler.check_response(response)
+  File "c:\Users\Bhavya\Anaconda3\lib\site-packages\selenium\webdriver\remote\errorhandler.py", line 242, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.WebDriverException: Message: unknown error: session deleted because of page crash
+from tab crashed
+  (Session info: headless chrome=73.0.3683.86)
+  (Driver info: chromedriver=73.0.3683.68 (47787ec04b6e38e22703e856e101e840b65afe72),platform=Windows NT 10.0.17134 x86_64)
+
+Exception ignored in: <bound method Utils.__del__ of <news.utils.Utils object at 0x0000011D40959E10>>
+Traceback (most recent call last):
+  File "C:\Users\Bhavya\Desktop\Vaibhav\Django-projects\recallie_web\news\utils.py", line 202, in __del__
+  File "C:\Users\Bhavya\Desktop\Vaibhav\Django-projects\recallie_web\news\utils.py", line 306, in save_dict
+  File "C:\Users\Bhavya\Desktop\Vaibhav\Django-projects\recallie_web\news\utils.py", line 315, in get_dict
+NameError: name 'open' is not defined

@@ -29,23 +29,24 @@ function refresh() {
 
 function get_recall(link) {
     document.getElementById('modal_body').innerHTML = '<br><br><centre> <div class="dot-carousel"> </div> </centre>' ;
+    localStorage.setItem("entity", '');
     entity = localStorage.getItem("parent_entity");
+    localStorage.setItem("link", link);
     console.log(link);
     $.ajax({
-        url: 'result',
+        url: 'recall',
         data: {
             'link': link,
             'query': entity
         },
         dataType: 'json',
         success: function(data){
-            console.log(data['news']);
-            document.getElementById('modal_body').innerHTML = data['news'];
+            console.log(data['news_df']);
+            document.getElementById('modal_body').innerHTML = data['news_df'];
         }
         
     })
 }
-
 
 function get_headlines(e) {
     value = e.innerHTML;
@@ -72,4 +73,34 @@ function get_headlines(e) {
         
     });
     button_load();
+}
+
+
+function updateDF(e) {
+    value = e;
+    document.getElementById('threshold_conf').innerHTML = value;
+    console.log(value);
+    //document.getElementById('modal_body').innerHTML = '<br><br><centre> <div class="dot-carousel"> </div> </centre>' ;
+    link = localStorage.getItem("link");
+    entity = localStorage.getItem("parent_entity");
+    $.ajax({
+        url: 'update',
+        data: {
+            'link': link,
+            'query': entity,
+            'confidence': value
+        },
+        dataType: 'json',
+        success: function(data){
+            console.log(data['news_df']);
+            document.getElementById('modal_body').innerHTML = data['news_df'];
+        }
+        
+    })
+    
+}
+
+
+function updateThresholdDisplay(e) {
+    document.getElementById('threshold_conf').innerHTML = e;
 }

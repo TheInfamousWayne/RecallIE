@@ -103,11 +103,58 @@ li:hover{
     max-height: 100%; 
 }
 
+/**
+ * ==============================================
+ * Threshold Slider
+ * ==============================================
+ */
+@import url(https://fonts.googleapis.com/css?family=Dosis:700);
+
+.value {
+  border-bottom: 1px dashed #bdc3c7;
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.8em;
+  width: 30px; 
+  height: 20px;
+  line-height: 0px;
+  margin: 30px auto;
+  margin-bottom: 50px;
+  letter-spacing: -.07em;
+  text-shadow: white 2px 2px 2px;
+}
+input[type="range"] {
+  display: block;
+  -webkit-appearance: none;
+  background-color: #bdc3c7;
+  width: 250px;
+  height: 5px;
+  border-radius: 2px;
+  margin: 0 auto;
+  outline: 0;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  background-color: #e74c3c;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid white;
+  cursor: pointer;
+  transition: .3s ease-in-out;
+}​
+  input[type="range"]::-webkit-slider-thumb:hover {
+    background-color: white;
+    border: 2px solid #e74c3c;
+  }
+  input[type="range"]::-webkit-slider-thumb:active {
+    transform: scale(1.6);
+  }
+
 </style>
 
+
 <!-- ----------------------------------------------------------------------------------------- -->
-
-
 
 
 <head>
@@ -206,13 +253,13 @@ li:hover{
 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#recall_df">
   Launch demo modal
 </button> -->
-
 <!-- Modal -->
 <div class="modal fade " id="recall_df" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
   <div class="modal-dialog " role="document" >
-    <div class="modal-content" style="text-align:center; ">
+    <div class="modal-content" >
       <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLongTitle">Recall Prediction</h5>
+        <h2 class="modal-title" id="exampleModalLongTitle"><strong>Recall Prediction</strong></h2>
+        <!-- <input type="range" name="points" min=".8" max="1" step="0.01" onchange="updateDF(this.value)"/> -->
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -221,16 +268,13 @@ li:hover{
       <!-- Get Info From Python File -->
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <div class="value" id='threshold_conf'>0</div>
+        <input type="range" name="points" min=".8" max="1"  value='.8' step="0.01"  onmousemove="updateThresholdDisplay(this.value)" onchange="updateDF(this.value)" />
+        <!-- <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button> -->
       </div>
     </div>
   </div>
 </div>
-
-
-
-
-
 	
 </body>
 
