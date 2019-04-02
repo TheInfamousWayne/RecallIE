@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .utils import Utils
+from .utils import *
 import pandas as pd
 from django.http import JsonResponse
 
@@ -32,7 +32,9 @@ def result(request):
 			main_df = df[df['Subject'].apply(lambda row: u.get_id(row)) == message_id]
 			other_df = df[~df.isin(main_df).all(1)]
 			#print("2")
+
 			if (not main_df.empty):
+				main_df = add_dummy(main_df, query=set(main_df['Subject']).pop()) ## Adding dummy variables
 				main_df = main_df.sort_values('Object', ascending=True).drop_duplicates().groupby(['Subject','Relationship']).agg(lambda x: list(x))
 				main_df['Count'] = main_df['Object'].apply(lambda x: len(x))
 				main_df = main_df[[c for c in main_df if c not in ['Confidence']] + ['Confidence']]

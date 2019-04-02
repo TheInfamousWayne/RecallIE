@@ -27,7 +27,6 @@ def recall(request):
 	web = web.rename(index=str, columns={"Object": "Web", "Count": "Web_Count"})
 	reality = main_df[['Pseudo Ground Truth', 'Count_PGT']]
 
-
 	isPerson = False
 
 	def add_dummy(df, person=False):
@@ -89,7 +88,8 @@ def update(request):
 	with open('data/dumps/temp_web_reality_df.pkl', 'rb') as fp:
 		web_reality = pickle.load(fp)
 
-	df.drop(df[df.Confidence < threshold].index, inplace=True)
+	#df.drop(df[df.Confidence < threshold].index, inplace=True)
+	df['Object'][df.Confidence < threshold] = '--removed--'
 	df = count_confidence(df)
 	df = df.join(web_reality)
 	with pd.option_context('display.max_colwidth', -1):

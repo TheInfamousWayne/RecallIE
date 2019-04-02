@@ -96,6 +96,20 @@ QUERY_DICT = {'Organization Founded By^-1':["""SELECT ?item ?itemLabel WHERE {
 
 
 
+
+PERSON_RELATIONS = ['Educated at', 'Citizen of', 'Person Employee or Member of', 'Organization top employees^-1',\
+                    'Person Current and Past Location of Residence', 'Person Parents', 'Person Parents^-1',\
+                    'Person Place of Birth', 'Person Siblings', 'Person Spouse']
+ORG_RELATION =     ['Organization Founded By', 'Organization Collaboration', 'Organization Collaboration^-1',\
+                    'Organization Headquarters', 'Organization Subsidiary Of', 'Organization Subsidiary Of^-1',\
+                    'Organization top employees', 'Person Employee or Member of^-1', 'Organization Acquired By^-1',\
+                    'Organization Acquired By', 'Organization Provider To', 'Organization Provider To^-1']
+COMMON_RELATION =  ['Organization Founded By^-1']
+
+
+
+
+
 from SPARQLWrapper import SPARQLWrapper, JSON   
 from rosette.api import API, DocumentParameters, RosetteException
 import pandas as pd
@@ -104,6 +118,21 @@ import requests
 import pickle
 import numpy as np
 from threading import RLock
+
+
+def add_dummy(df, query):
+      rel = set(df['Relationship'])
+      isPerson = True if any(s in PERSON_RELATIONS for s in rel) else False
+      if isPerson:
+          dummy_rels = COMMON_RELATION + PERSON_RELATIONS
+      else:
+          dummy_rels = COMMON_RELATION + ORG_RELATION
+      for r in rel:
+          dummy_rels.remove(r)
+      for r in dummy_rels:
+          df = df.append({'Subject': query, 'Relationship':r, 'Object':'', 'Confidence':round(np.random.uniform(0.85,1),2)}, ignore_index=True)
+      return df
+
 
 class Utils:
 
@@ -134,7 +163,25 @@ class Utils:
             except Exception:
                 return -1 #The id doesn't exist
 
-
+    def id_to_name(self, eid):
+        if eid in self.id_dict.values():
+            return [key for key, value in self.id_dict.items() if value == eid][0]
+        else:
+            API_ENDPOINT = "https://www.wikidata.org/w/api.php"
+            query = eid
+            params = {
+                'action': 'wbsearchentities',
+                'format': 'json',
+                'language': 'en',
+                'search': query
+            }
+            r = requests.get(API_ENDPOINT, params = params)
+            try:
+                with self.lock:
+                    self.id_dict[ r.json()['search'][0]['label'] ] = r.json()['search'][0]['id']
+                return r.json()['search'][0]['label']
+            except Exception:
+                return -1 #The id doesn't exist
 
     def get_results(self, query, value, endpoint_url="https://query.wikidata.org/sparql"):
         sparql = SPARQLWrapper(endpoint_url)

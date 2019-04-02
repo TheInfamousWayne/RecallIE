@@ -3,7 +3,7 @@ from django.http import JsonResponse
 import wikipedia
 import pandas as pd
 import numpy as np
-from .utils import Utils
+from .utils import *
 
 # Create your views here.
 def index(request):
@@ -31,7 +31,8 @@ def result(request, debug=False):
             u = Utils()
             result, message_id = u.Analyse(message_data)
             df = pd.DataFrame(result, columns=['Subject','Relationship','Object','Confidence'])
-        
+            
+            ######################
             e1Grp = df.sort_values('Object', ascending=True).drop_duplicates(subset=['Subject','Relationship','Object']).groupby(['Subject','Relationship']).agg(lambda x: list(x)).reset_index()
             rows = []
             _ = e1Grp.apply(lambda row: [rows.append([row['Subject'],row['Relationship'], e2, e3]) for e2,e3 in zip(row.Object,row.Confidence)], axis=1)
@@ -43,7 +44,9 @@ def result(request, debug=False):
             main_df = df[df['Subject'].apply(lambda row: u.get_id(row)) == message_id]
             other_df = df[~df.isin(main_df).all(1)]
             
+            ###### Sorting ######
             if (not main_df.empty):
+                main_df = add_dummy(main_df, query=message_data) ## Adding dummy variables
                 main_df = main_df.sort_values('Object', ascending=True).drop_duplicates().groupby(['Subject','Relationship']).agg(lambda x: list(x))
                 main_df['Count'] = main_df['Object'].apply(lambda x: len(x))
                 main_df = main_df[[c for c in main_df if c not in ['Confidence']] + ['Confidence']]
@@ -53,6 +56,7 @@ def result(request, debug=False):
                 other_df['Count'] = other_df['Object'].apply(lambda x: len(x))
                 other_df = other_df[[c for c in other_df if c not in ['Confidence']] + ['Confidence']]
             ########################
+
 
             ###### ADDING GROUND TRUTH ######
             main_df = u.add_ground_truth(main_df)

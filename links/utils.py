@@ -104,6 +104,20 @@ QUERY_DICT = {'Organization Founded By^-1':["""SELECT ?item ?itemLabel WHERE {
 
 
 
+PERSON_RELATIONS = ['Educated at', 'Citizen of', 'Person Employee or Member of', 'Organization top employees^-1',\
+                    'Person Current and Past Location of Residence', 'Person Parents', 'Person Parents^-1',\
+                    'Person Place of Birth', 'Person Siblings', 'Person Spouse']
+ORG_RELATION =     ['Organization Founded By', 'Organization Collaboration', 'Organization Collaboration^-1',\
+                    'Organization Headquarters', 'Organization Subsidiary Of', 'Organization Subsidiary Of^-1',\
+                    'Organization top employees', 'Person Employee or Member of^-1', 'Organization Acquired By^-1',\
+                    'Organization Acquired By', 'Organization Provider To', 'Organization Provider To^-1']
+COMMON_RELATION =  ['Organization Founded By^-1']
+
+
+
+
+
+
 from SPARQLWrapper import SPARQLWrapper, JSON   
 from rosette.api import API, DocumentParameters, RosetteException
 import pandas as pd
@@ -118,6 +132,19 @@ import threading
 from threading import Thread
 import time
 import queue
+
+def add_dummy(df, query):
+      rel = set(df['Relationship'])
+      isPerson = True if any(s in PERSON_RELATIONS for s in rel) else False
+      if isPerson:
+          dummy_rels = COMMON_RELATION + PERSON_RELATIONS
+      else:
+          dummy_rels = COMMON_RELATION + ORG_RELATION
+      for r in rel:
+          dummy_rels.remove(r)
+      for r in dummy_rels:
+          df = df.append({'Subject': query, 'Relationship':r, 'Object':'', 'Confidence':round(np.random.uniform(0.85,1),2)}, ignore_index=True)
+      return df
 
 class Utils:
     
@@ -158,12 +185,6 @@ class Utils:
 
 
     def id_to_name(self, eid):
-#         if dict_to_use:
-#             dict_to_use = dict_to_use
-#         else:
-#             global id_dict
-#             dict_to_use = id_dict
-
         if eid in self.id_dict.values():
             return [key for key, value in self.id_dict.items() if value == eid][0]
         else:
