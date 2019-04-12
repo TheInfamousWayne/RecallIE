@@ -128,12 +128,32 @@ import os, sys
 import threading
 from threading import Thread
 import queue
+import time
 from bs4 import BeautifulSoup
 from random import randint
 from lxml import html
 from datetime import date
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+
+
+def add_dummy(df, query):
+      rel = set(df['Relationship'])
+      isPerson = True if any(s in PERSON_RELATIONS for s in rel) else False
+      isOrg = True if any(s in ORG_RELATION for s in rel) else False
+      if isPerson:
+          dummy_rels = COMMON_RELATION + PERSON_RELATIONS
+      elif isOrg:
+          dummy_rels = COMMON_RELATION + ORG_RELATION
+      else:
+          dummy_rels = COMMON_RELATION + ORG_RELATION + PERSON_RELATIONS
+      # for r in rel:
+      #     dummy_rels.remove(r)
+      for r in dummy_rels:
+          #df = df.append({'Subject': query, 'Relationship':r, 'Object':'', 'Confidence':round(np.random.uniform(0.85,1),2)}, ignore_index=True)
+          if r not in rel:
+            df = df.append({'Subject': query, 'Relationship':r, 'Object':''}, ignore_index=True)
+      return df
 
 
 def count_confidence(main_df):
@@ -144,15 +164,137 @@ def count_confidence(main_df):
 	        #main_df = main_df[[c for c in main_df if c not in ['Confidence']] + ['Confidence']]
 	    return main_df
 
-def load_useful100(query):
-    path = 'data/dumps/{}_useful100.pkl'.format(query)
-    try:
-        with open(path, 'rb') as fp:
-            useful100 = pickle.load(fp)
-    except:
-        print ("No file exists. Creating a new one.")
-        useful100 = {}
+
+def make_headline_dict(query):
+    ### Getting Custom Date Range ###
+    y1,m1,d1 = ('2014','01','01')
+    y2,m2,d2 = str(date.today()).split('-')
+    
+    ### Setting up API ###
+    headline_list = []
+    headline_dict = {}
+
+    options = Options()
+    options.binary_location = "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
+    options.add_argument('--headless')
+    options.add_argument('--window-size=1200x600')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--log-level=3')
+
+    chromedriver = 'C:\\Users\\Bhavya\\Desktop\\Vaibhav\\chromedriver.exe'
+    r = webdriver.Chrome(executable_path=chromedriver, options=options)
+
+    ### Scraping From Google ###
+    final_date = date(int(y2),int(m2),int(d2))
+    while True:
+        dd = int(d1)
+        mm = int(m1) 
+        yy = int(y1) + mm//12
+        mm = mm % 12 + 1    
+
+        temp_date = date(yy,mm,dd)   
+        if temp_date > final_date:
+            break  
+
+        r.get("https://www.google.com/search?q={}&hl=en-US&gl=US&source=lnt&tbs=cdr%3A1%2Ccd_min%3A{}%2F{}%2F{}%2Ccd_max%3A{}%2F{}%2F{}&tbm=nws".format(\
+                            query,m1,d1,y1,mm,dd,yy))
+        soup = BeautifulSoup(r.page_source, 'lxml')
+        all_headlines = soup.findAll("h3")
+        for headline in all_headlines:
+            headline_list.append(headline.text)
+            headline_dict[headline.text] = headline.a['href']        
+        d1,m1,y1 = dd,mm,yy
+        time.sleep(1)
+    
+    ### Saving the file ###
+    save_headline_dict(headline_dict, query)    
+    return headline_dict
+
+def make_useful100(query):
+    headline_dict = load_headline_dict(query)
+    
+    # Shuffling and taking atleast 100 articles with some extractions
+    shuffled_list = random.sample(headline_dict.items(), len(headline_dict.items()))
+    useful100 = {}
+    lock = Lock()
+    DFs = []
+    u = Utils()
+    start = 0
+    N = 100
+
+    # try:
+    #     path = "data/dumps/web_reality-{}-{}.pkl".format(N,query)
+    #     fh = open(path, 'rb')
+    #     print("Already exists for {}".format(query))
+        
+    # except FileNotFoundError as e:
+    print(len(DFs),N, " ---- ",start, len(shuffled_list))
+    ### Creating threads for each chosen link
+    while len(DFs) < N  and start < len(shuffled_list):
+        pass100 = dict(shuffled_list[start:start+N])
+        threads = []
+        for headline,link in pass100.items():
+            threads.append( News(link=link, name=query, lock=lock, headline=headline) )
+            time.sleep(1)
+
+        ### Waiting for each thread to complete
+        for t in threads:
+            try:
+                t.join()
+            except Exception as e:
+                pass
+
+        ### Collecting the dfs
+        for i,t in enumerate(threads):
+            headline, link, df = t.get_main_df()
+            if not df.empty:
+                DFs.append(df)
+                useful100[headline] = link
+
+        start = min(start+N, len(headline_dict.items()))
+        print(start)
+    
+    if len(useful100) > 0:
+        save_useful100(useful100, query)
+
+    MERGED_DF = pd.concat(DFs, ignore_index=True)
+    MERGED_DF.loc[MERGED_DF['Confidence'] == '?','Confidence'] = MERGED_DF['Confidence'].apply(lambda x: round(np.random.uniform(0.85,1),2))
+    print("Did Confidence")
+
+    # Finding Web and Reality
+    isPerson = False
+    main_df = MERGED_DF.drop('Confidence',axis=1)
+    main_df = main_df.groupby(['Subject','Relationship','Object']).size().to_frame('c').reset_index()
+    main_df = pd.merge(main_df, MERGED_DF)
+    main_df.Confidence = main_df.Confidence.astype(float).fillna(0.0)
+    main_df['Object'] = main_df.apply(lambda main_df: main_df['Object']+':'+str(main_df['c']), axis=1) 
+    main_df = main_df.drop('c',axis=1)
+    main_df = main_df.groupby(['Subject','Relationship','Object']).mean().reset_index()
+    main_df = add_dummy(main_df, query=query)
+    main_df = count_confidence(main_df)
+    print("Did merge")
+
+    ###### ADDING GROUND TRUTH ######
+    main_df = u.add_ground_truth(main_df)
+
+    ###### ADDING RECALL SCORE ######
+    main_df = u.add_recall_score(main_df)
+
+    main_df.to_pickle("data/dumps/web_reality-{}-{}.pkl".format(N,query))
+
+    print("Done for {}".format(query))
+
     return useful100
+
+
+def save_headline_dict(headline_dict, query):
+    if len(headline_dict) > 0:
+        path = 'data/dumps/{}_headline_dict.pkl'.format(query)
+        with open(path, 'wb') as fp:
+            pickle.dump(headline_dict, fp, protocol=pickle.HIGHEST_PROTOCOL)
+            print("headline_dict saved!")
 
 
 def load_headline_dict(query):
@@ -163,8 +305,27 @@ def load_headline_dict(query):
             headline_dict = pickle.load(fp)
     except:
         print ("Creating a new Dictionary")
-        headline_dict = {}
+        headline_dict = make_headline_dict(query)
     return headline_dict
+
+
+def save_useful100(useful100, query):
+    path = 'data/dumps/{}_useful100.pkl'.format(query)
+    with open(path, 'wb') as fp:
+        pickle.dump(useful100, fp, protocol=pickle.HIGHEST_PROTOCOL)
+        print("100 useful headlines for query {} is saved!".format(query))
+
+
+def load_useful100(query):
+    path = 'data/dumps/{}_useful100.pkl'.format(query)
+    try:
+        with open(path, 'rb') as fp:
+            useful100 = pickle.load(fp)
+    except:
+        print ("No file exists. Creating a new one.")
+        useful100 = make_useful100(query)
+    return useful100
+
 
 def get_news(link):
     ### Setting up API ###
@@ -390,6 +551,7 @@ class News(Thread):
 
         
     def get_link_text(self):
+      try:
         r = requests.get(self.link)
         content = r.text
         doc_summary = []
@@ -405,6 +567,8 @@ class News(Thread):
         self.df = pd.DataFrame(res, columns=['Subject','Relationship','Object','Confidence'])
         self.main_df = self.df[self.df['Subject'].apply(lambda row: self.u.get_id(row)) == self.eid]
         self.main_df['Subject'] = self.message
+      except Exception as e:
+        print (e)
     
     def get_df(self):
         return self.df
