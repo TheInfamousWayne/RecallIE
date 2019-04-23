@@ -54,10 +54,37 @@ def recall(request):
 	df = count_confidence(df)
 	df = df.join(web_reality)
 
+	with open('data/dumps/temp_initial_df.pkl', 'wb') as fp:
+		pickle.dump(df, fp, protocol=pickle.HIGHEST_PROTOCOL)
+
+	df = add_3Recalls(df)
+
 	with pd.option_context('display.max_colwidth', -1):
 		df = df.to_html()
 
 	return JsonResponse({'news_df':df})
+
+
+def add_3Recalls(df):
+	def remove_count(element):
+		return element.split(':')[0]
+	def r_web(df):
+		extractions = df['Object']
+		clean_web = list(map(remove_count, df['Web']))
+		try:
+			return len(list(set(clean_web) & set(extractions))) / len(clean_web)
+		except Exception as e:
+			return 1
+	
+	with open('data/dumps/temp_initial_df.pkl', 'rb') as fp:
+		initial_final_df = pickle.load(fp)
+
+	df['R_Local'] = df['Confidence'].apply(lambda x: sum(x)).fillna(1) / initial_final_df['Confidence'].apply(lambda x: sum(x)).fillna(1)
+	df['R_Web'] = df.apply(r_web, axis=1)
+	df['R_Reality'] = np.random.randint(0, 100, df.shape[0])/100
+	remove_cols = ['Web','Web_Count','Pseudo Ground Truth','Count_PGT']
+	df.drop(remove_cols, axis=1, inplace=True)
+	return df
 
 
 
@@ -78,6 +105,7 @@ def update(request):
 	df = add_dummy(df, query=query)
 	df = count_confidence(df)
 	df = df.join(web_reality, how='inner')
+	df = add_3Recalls(df)
 	with pd.option_context('display.max_colwidth', -1):
 		df = df.to_html()
 

@@ -138,22 +138,22 @@ from selenium.webdriver.chrome.options import Options
 
 
 def add_dummy(df, query):
-      rel = set(df['Relationship'])
-      isPerson = True if any(s in PERSON_RELATIONS for s in rel) else False
-      isOrg = True if any(s in ORG_RELATION for s in rel) else False
-      if isPerson:
-          dummy_rels = COMMON_RELATION + PERSON_RELATIONS
-      elif isOrg:
-          dummy_rels = COMMON_RELATION + ORG_RELATION
-      else:
-          dummy_rels = COMMON_RELATION + ORG_RELATION + PERSON_RELATIONS
+    rel = set(df['Relationship'])
+    isPerson = True if any(s in PERSON_RELATIONS for s in rel) else False
+    isOrg = True if any(s in ORG_RELATION for s in rel) else False
+    if isPerson:
+        dummy_rels = COMMON_RELATION + PERSON_RELATIONS
+    elif isOrg:
+        dummy_rels = COMMON_RELATION + ORG_RELATION
+    else:
+        dummy_rels = COMMON_RELATION + ORG_RELATION + PERSON_RELATIONS
       # for r in rel:
       #     dummy_rels.remove(r)
-      for r in dummy_rels:
+    for r in dummy_rels:
           #df = df.append({'Subject': query, 'Relationship':r, 'Object':'', 'Confidence':round(np.random.uniform(0.85,1),2)}, ignore_index=True)
-          if r not in rel:
+        if r not in rel:
             df = df.append({'Subject': query, 'Relationship':r, 'Object':''}, ignore_index=True)
-      return df
+    return df
 
 
 def count_confidence(main_df):
@@ -223,6 +223,7 @@ def make_useful100(query):
     u = Utils()
     start = 0
     N = 100
+    DF_dict = {}
 
     # try:
     #     path = "data/dumps/web_reality-{}-{}.pkl".format(N,query)
@@ -252,12 +253,14 @@ def make_useful100(query):
             if not df.empty:
                 DFs.append(df)
                 useful100[headline] = link
+                DF_dict[link] = df
 
         start = min(start+N, len(headline_dict.items()))
         print(start)
     
     if len(useful100) > 0:
         save_useful100(useful100, query)
+        save_DF_dict(DF_dict, query)
 
     MERGED_DF = pd.concat(DFs, ignore_index=True)
     MERGED_DF.loc[MERGED_DF['Confidence'] == '?','Confidence'] = MERGED_DF['Confidence'].apply(lambda x: round(np.random.uniform(0.85,1),2))
@@ -307,6 +310,13 @@ def load_headline_dict(query):
         print ("Creating a new Dictionary")
         headline_dict = make_headline_dict(query)
     return headline_dict
+
+
+def save_DF_dict(DF_dict, query):
+    path = 'data/dumps/{}_DF_dict.pkl'.format(query)
+    with open(path, 'wb') as fp:
+        pickle.dump(DF_dict, fp, protocol=pickle.HIGHEST_PROTOCOL)
+        print("DF dict for useful100 of query {} is saved!".format(query))
 
 
 def save_useful100(useful100, query):
@@ -551,24 +561,24 @@ class News(Thread):
 
         
     def get_link_text(self):
-      try:
-        r = requests.get(self.link)
-        content = r.text
-        doc_summary = []
-        soup = BeautifulSoup(content, "html.parser")
-        paras = soup.findAll("p")
-        for p in paras:
-            doc_summary.append(p.text)
-        s = " ".join(doc_summary)
-        s = " ".join(s.split())
-        self.doc = s
-        ## Analysing the link text
-        res,_ = self.u.Analyse(message=self.message, doc=self.doc, lock=self.lock)
-        self.df = pd.DataFrame(res, columns=['Subject','Relationship','Object','Confidence'])
-        self.main_df = self.df[self.df['Subject'].apply(lambda row: self.u.get_id(row)) == self.eid]
-        self.main_df['Subject'] = self.message
-      except Exception as e:
-        print (e)
+        try:
+            r = requests.get(self.link)
+            content = r.text
+            doc_summary = []
+            soup = BeautifulSoup(content, "html.parser")
+            paras = soup.findAll("p")
+            for p in paras:
+                doc_summary.append(p.text)
+            s = " ".join(doc_summary)
+            s = " ".join(s.split())
+            self.doc = s
+            ## Analysing the link text
+            res,_ = self.u.Analyse(message=self.message, doc=self.doc, lock=self.lock)
+            self.df = pd.DataFrame(res, columns=['Subject','Relationship','Object','Confidence'])
+            self.main_df = self.df[self.df['Subject'].apply(lambda row: self.u.get_id(row)) == self.eid]
+            self.main_df['Subject'] = self.message
+        except Exception as e:
+            print (e)
     
     def get_df(self):
         return self.df
